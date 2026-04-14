@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifeLink — Blood Donor Network</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#040b14;--bg2:#071020;--bg3:#0a1628;
+  --surface:rgba(255,255,255,0.03);--surface2:rgba(255,255,255,0.06);
+  --border:rgba(0,200,255,0.12);--border2:rgba(0,200,255,0.22);
+  --cyan:#00c8ff;--cyan2:#0090cc;--cyanDim:rgba(0,200,255,0.1);
+  --red:#ff2d55;--red2:#cc1133;--redDim:rgba(255,45,85,0.1);
+  --green:#00e676;--greenDim:rgba(0,230,118,0.1);
+  --amber:#ffab00;--amberDim:rgba(255,171,0,0.1);
+  --white:#e8f4ff;--gray:#5a7a99;--gray2:#3a5570;
+  --font:'Syne',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--white);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.hidden{display:none!important}
+
+/* ── BG EFFECTS ── */
+.bg-layer{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.bg-orb{position:absolute;border-radius:50%;filter:blur(80px);animation:orbFloat 12s ease-in-out infinite}
+.bg-orb.o1{width:500px;height:500px;background:radial-gradient(circle,rgba(0,200,255,0.05),transparent 70%);top:-150px;right:-150px;animation-duration:14s}
+.bg-orb.o2{width:400px;height:400px;background:radial-gradient(circle,rgba(255,45,85,0.04),transparent 70%);bottom:-100px;left:-100px;animation-duration:10s;animation-delay:-4s}
+.bg-orb.o3{width:300px;height:300px;background:radial-gradient(circle,rgba(0,230,118,0.03),transparent 70%);top:40%;left:40%;animation-duration:16s;animation-delay:-8s}
+.bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(0,200,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,0.025) 1px,transparent 1px);background-size:60px 60px}
+@keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(20px,-15px) scale(1.05)}66%{transform:translate(-10px,10px) scale(0.97)}}
+
+/* ── TYPOGRAPHY ── */
+.t-display{font-size:clamp(1.6rem,4vw,2.2rem);font-weight:800;letter-spacing:-0.03em;line-height:1.1}
+.t-title{font-size:1.1rem;font-weight:700;letter-spacing:-0.01em}
+.t-label{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--gray)}
+.t-mono{font-family:var(--mono);font-size:0.8rem}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;height:58px;background:rgba(4,11,20,0.85);backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1.5rem;gap:1.5rem}
+.nav-logo{font-family:var(--font);font-weight:800;font-size:1.1rem;letter-spacing:-0.02em;color:var(--white);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.nav-logo-dot{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 10px var(--red);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(0.85)}}
+.nav-tabs{display:flex;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none}
+.nav-tabs::-webkit-scrollbar{display:none}
+.nav-tab{background:none;border:none;color:var(--gray);font-family:var(--font);font-size:0.82rem;font-weight:600;padding:6px 14px;border-radius:6px;cursor:pointer;transition:all 0.2s;white-space:nowrap;letter-spacing:0.01em}
+.nav-tab:hover{color:var(--white);background:var(--surface2)}
+.nav-tab.active{color:var(--cyan);background:rgba(0,200,255,0.08)}
+.nav-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.notif-btn{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;transition:all 0.2s}
+.notif-btn:hover{border-color:var(--border2);background:var(--surface2)}
+.notif-badge{position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700;border:2px solid var(--bg)}
+.avatar{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--cyan),var(--cyan2));display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:800;color:var(--bg);cursor:pointer;transition:all 0.2s}
+.avatar:hover{transform:scale(1.05)}
+.btn-logout{background:none;border:1px solid var(--border);color:var(--gray);font-family:var(--font);font-size:0.75rem;font-weight:600;padding:6px 12px;border-radius:6px;cursor:pointer;transition:all 0.2s}
+.btn-logout:hover{border-color:var(--red);color:var(--red)}
+
+/* ── AUTH ── */
+.auth-wrap{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;padding:1rem}
+.auth-card{background:rgba(7,16,32,0.95);border:1px solid var(--border);border-radius:20px;padding:2.5rem;width:100%;max-width:440px;position:relative;z-index:1;backdrop-filter:blur(30px)}
+.auth-card::before{content:'';position:absolute;inset:-1px;border-radius:20px;background:linear-gradient(135deg,rgba(0,200,255,0.15),transparent 50%,rgba(255,45,85,0.08));pointer-events:none;z-index:-1}
+.auth-logo{text-align:center;margin-bottom:2rem}
+.auth-logo h1{font-size:2rem;font-weight:800;letter-spacing:-0.04em}
+.auth-logo h1 span{color:var(--red)}
+.auth-logo p{color:var(--gray);font-size:0.82rem;margin-top:6px;font-weight:500}
+.field{margin-bottom:1.1rem}
+.field label{display:block;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--cyan);margin-bottom:6px}
+.input{width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--white);font-family:var(--font);font-size:0.9rem;outline:none;transition:all 0.2s}
+.input:focus{border-color:var(--cyan);background:rgba(0,200,255,0.04);box-shadow:0 0 0 3px rgba(0,200,255,0.07)}
+.input::placeholder{color:var(--gray2)}
+select.input option{background:var(--bg2)}
+.btn{width:100%;background:linear-gradient(135deg,var(--cyan),var(--cyan2));border:none;border-radius:10px;padding:13px;color:var(--bg);font-family:var(--font);font-size:0.95rem;font-weight:800;cursor:pointer;transition:all 0.25s;letter-spacing:0.01em;position:relative;overflow:hidden}
+.btn::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.1),transparent);opacity:0;transition:opacity 0.2s}
+.btn:hover::after{opacity:1}
+.btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,200,255,0.3)}
+.btn:active{transform:translateY(0)}
+.btn.red{background:linear-gradient(135deg,var(--red),var(--red2))}
+.btn.red:hover{box-shadow:0 8px 24px rgba(255,45,85,0.3)}
+.btn.outline{background:none;border:1px solid var(--border);color:var(--cyan);font-weight:700}
+.btn.outline:hover{border-color:var(--cyan);background:var(--cyanDim)}
+.btn.sm{width:auto;padding:7px 16px;font-size:0.78rem}
+.btn.xs{width:auto;padding:5px 12px;font-size:0.72rem}
+.divider{display:flex;align-items:center;gap:10px;margin:1.2rem 0;color:var(--gray);font-size:0.75rem}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.role-btns{display:flex;gap:8px}
+.role-btn{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 6px;text-align:center;cursor:pointer;transition:all 0.2s;font-size:0.78rem;font-weight:700;color:var(--gray);font-family:var(--font)}
+.role-btn:hover{border-color:var(--cyan);color:var(--cyan);background:var(--cyanDim)}
+.role-btn .ri{font-size:1.2rem;display:block;margin-bottom:4px}
+.auth-toggle{text-align:center;margin-top:1.2rem;font-size:0.82rem;color:var(--gray)}
+.auth-toggle a{color:var(--cyan);cursor:pointer;font-weight:700}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ── APP SHELL ── */
+.shell{padding-top:58px;min-height:100vh;position:relative;z-index:1}
+.page{padding:1.8rem;max-width:1200px;margin:0 auto;animation:fadeUp 0.3s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.page-hd{margin-bottom:1.8rem;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.page-hd-left h1{font-size:1.6rem;font-weight:800;letter-spacing:-0.03em}
+.page-hd-left p{color:var(--gray);font-size:0.82rem;margin-top:3px;font-weight:500}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.4rem;position:relative;overflow:hidden}
+.card-accent{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),transparent)}
+.card-accent.red{background:linear-gradient(90deg,var(--red),transparent)}
+.card-accent.green{background:linear-gradient(90deg,var(--green),transparent)}
+.card-accent.amber{background:linear-gradient(90deg,var(--amber),transparent)}
+.card-title{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--cyan);margin-bottom:1rem}
+.card-title.red{color:var(--red)}
+
+/* ── STAT CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1rem;margin-bottom:1.8rem}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.3rem;position:relative;overflow:hidden;transition:border-color 0.2s,transform 0.2s;cursor:default}
+.stat:hover{border-color:var(--border2);transform:translateY(-2px)}
+.stat::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at top left,rgba(0,200,255,0.04),transparent 60%);pointer-events:none}
+.stat.danger::after{background:radial-gradient(circle at top left,rgba(255,45,85,0.06),transparent 60%)}
+.stat.success::after{background:radial-gradient(circle at top left,rgba(0,230,118,0.05),transparent 60%)}
+.stat.warn::after{background:radial-gradient(circle at top left,rgba(255,171,0,0.05),transparent 60%)}
+.stat-bar{height:2px;width:100%;background:rgba(255,255,255,0.05);margin-bottom:1rem;border-radius:1px;overflow:hidden}
+.stat-bar-fill{height:100%;border-radius:1px}
+.stat-icon{font-size:1.3rem;margin-bottom:10px;display:block}
+.stat-num{font-size:2rem;font-weight:800;letter-spacing:-0.04em;line-height:1}
+.stat-lbl{font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--gray);margin-top:6px}
+.stat-change{font-size:0.72rem;font-weight:600;margin-top:5px}
+
+/* ── ALERT BANNER ── */
+.alert-banner{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;border-radius:14px;padding:1.2rem 1.4rem;margin-bottom:1.8rem;border:1px solid;animation:borderPulse 2.5s ease-in-out infinite;position:relative;overflow:hidden}
+.alert-banner::before{content:'';position:absolute;inset:0;background:var(--redDim);pointer-events:none}
+.alert-banner{border-color:rgba(255,45,85,0.4)}
+@keyframes borderPulse{0%,100%{border-color:rgba(255,45,85,0.3)}50%{border-color:rgba(255,45,85,0.7)}}
+.alert-icon{font-size:1.8rem;flex-shrink:0;animation:shake 3s ease-in-out infinite}
+@keyframes shake{0%,90%,100%{transform:rotate(0)}92%{transform:rotate(-6deg)}96%{transform:rotate(6deg)}}
+.alert-text h3{font-size:0.95rem;font-weight:800;color:var(--red)}
+.alert-text p{font-size:0.8rem;color:var(--gray);margin-top:2px}
+
+/* ── TABLES ── */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:0.83rem}
+th{text-align:left;padding:9px 12px;color:var(--gray);font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;border-bottom:1px solid var(--border)}
+td{padding:11px 12px;border-bottom:1px solid rgba(0,200,255,0.05);transition:background 0.15s}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(0,200,255,0.025)}
+
+/* ── BADGES ── */
+.blood{display:inline-block;padding:3px 9px;border-radius:6px;font-size:0.72rem;font-weight:700;font-family:var(--mono);letter-spacing:0.05em}
+.bO{background:rgba(255,45,85,0.12);color:#ff6b84;border:1px solid rgba(255,45,85,0.25)}
+.bA{background:rgba(0,200,255,0.1);color:var(--cyan);border:1px solid rgba(0,200,255,0.2)}
+.bB{background:rgba(0,230,118,0.1);color:var(--green);border:1px solid rgba(0,230,118,0.2)}
+.bAB{background:rgba(255,171,0,0.1);color:var(--amber);border:1px solid rgba(255,171,0,0.2)}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:6px;font-size:0.71rem;font-weight:700}
+.chip::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.c-active{background:rgba(0,230,118,0.1);color:var(--green)}.c-active::before{background:var(--green);box-shadow:0 0 6px var(--green)}
+.c-pending{background:rgba(255,171,0,0.1);color:var(--amber)}.c-pending::before{background:var(--amber)}
+.c-critical{background:rgba(255,45,85,0.1);color:var(--red)}.c-critical::before{background:var(--red);box-shadow:0 0 6px var(--red)}
+.c-inactive{background:rgba(90,122,153,0.1);color:var(--gray)}.c-inactive::before{background:var(--gray)}
+
+/* ── PROGRESS ── */
+.prog-bar{height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;margin-top:5px}
+.prog-fill{height:100%;border-radius:3px;transition:width 1s cubic-bezier(0.4,0,0.2,1)}
+
+/* ── GRID LAYOUTS ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
+@media(max-width:720px){.g2,.g3{grid-template-columns:1fr}.two-col{grid-template-columns:1fr}}
+
+/* ── EMERGENCY CARDS ── */
+.emerg-card{border-radius:14px;border:1px solid;padding:1.2rem;margin-bottom:0.8rem;transition:all 0.2s;position:relative;overflow:hidden}
+.emerg-card.critical{border-color:rgba(255,45,85,0.4);background:rgba(255,45,85,0.04)}
+.emerg-card.moderate{border-color:rgba(255,171,0,0.3);background:rgba(255,171,0,0.03)}
+.emerg-card.low{border-color:var(--border);background:var(--surface)}
+.emerg-card:hover{transform:translateY(-1px)}
+
+/* ── BFS RESULTS ── */
+.donor-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;display:flex;align-items:center;gap:12px;margin-bottom:8px;transition:all 0.2s;animation:slideRight 0.3s ease both}
+.donor-card:hover{border-color:var(--border2);background:var(--surface2)}
+@keyframes slideRight{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+.donor-ava{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.85rem;flex-shrink:0}
+.donor-info{flex:1;min-width:0}
+.donor-name{font-weight:700;font-size:0.9rem}
+.donor-meta{font-size:0.73rem;color:var(--gray);margin-top:2px}
+.dist-chip{background:var(--cyanDim);border:1px solid rgba(0,200,255,0.2);color:var(--cyan);font-size:0.7rem;font-weight:700;font-family:var(--mono);padding:3px 8px;border-radius:6px;white-space:nowrap;flex-shrink:0}
+
+/* ── NETWORK MAP ── */
+#networkMap{width:100%;height:440px;border-radius:10px;overflow:hidden;background:rgba(0,200,255,0.015);border:1px solid var(--border)}
+#networkMap svg{display:block}
+
+/* ── INVENTORY TABLE ── */
+.inv-val{font-family:var(--mono);font-size:0.82rem;font-weight:600}
+
+/* ── PROFILE ── */
+.profile-ava{width:72px;height:72px;border-radius:14px;background:linear-gradient(135deg,var(--cyan),var(--cyan2));display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:800;color:var(--bg);border:2px solid rgba(0,200,255,0.3)}
+
+/* ── TOAST ── */
+#toastCont{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column-reverse;gap:8px;max-width:300px}
+.toast{background:rgba(7,16,32,0.96);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-size:0.82rem;font-weight:600;color:var(--white);animation:toastIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both;backdrop-filter:blur(20px);display:flex;align-items:center;gap:8px}
+.toast.success{border-color:rgba(0,230,118,0.4);color:var(--green)}
+.toast.danger{border-color:rgba(255,45,85,0.4);color:#ff6b84}
+.toast.info{border-color:rgba(0,200,255,0.4);color:var(--cyan)}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px) scale(0.9)}to{opacity:1;transform:translateX(0) scale(1)}}
+
+/* ── SEARCH BAR ── */
+.search-input{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--white);font-family:var(--font);font-size:0.85rem;outline:none;transition:all 0.2s;width:100%}
+.search-input:focus{border-color:var(--cyan);background:rgba(0,200,255,0.03)}
+.search-input::placeholder{color:var(--gray2)}
+
+/* ── TOGGLE ── */
+.toggle{width:40px;height:22px;border-radius:11px;position:relative;cursor:pointer;transition:background 0.25s;flex-shrink:0}
+.toggle-knob{width:16px;height:16px;border-radius:50%;background:var(--white);position:absolute;top:3px;transition:left 0.25s cubic-bezier(0.34,1.56,0.64,1)}
+
+/* ── ROUTE CARDS ── */
+.route-card{background:rgba(0,200,255,0.02);border:1px solid var(--border);border-radius:10px;padding:1rem;transition:all 0.2s}
+.route-card:hover{border-color:var(--border2);background:var(--cyanDim)}
+
+/* ── IMPACT GRID ── */
+.impact-num{font-size:2.2rem;font-weight:800;letter-spacing:-0.04em}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--gray2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--gray)}
+
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+</style>
+</head>
+<body>
+
+<div class="bg-layer">
+  <div class="bg-grid"></div>
+  <div class="bg-orb o1"></div>
+  <div class="bg-orb o2"></div>
+  <div class="bg-orb o3"></div>
+</div>
+
+<div id="toastCont"></div>
+
+<!-- ══════════ AUTH ══════════ -->
+<div id="authWrap" class="auth-wrap">
+  <!-- LOGIN -->
+  <div id="loginPage" class="auth-card">
+    <div class="auth-logo">
+      <h1>LIFE<span>LINK</span></h1>
+      <p>Connecting donors · Saving lives · Chennai</p>
+    </div>
+    <div class="field"><label>Email</label><input id="loginEmail" type="email" class="input" placeholder="you@example.com" value="demo@lifelink.io"></div>
+    <div class="field"><label>Password</label><input id="loginPass" type="password" class="input" placeholder="••••••••" value="demo1234"></div>
+    <div style="text-align:right;margin:-4px 0 12px"><a style="font-size:0.78rem;color:var(--cyan);cursor:pointer;font-weight:700">Forgot password?</a></div>
+    <button class="btn" onclick="doLogin()">Sign In →</button>
+    <div class="divider">or continue as</div>
+    <div class="role-btns">
+      <div class="role-btn" onclick="quickLogin('donor')"><span class="ri">🩸</span>Donor</div>
+      <div class="role-btn" onclick="quickLogin('hospital')"><span class="ri">🏥</span>Hospital</div>
+      <div class="role-btn" onclick="quickLogin('bank')"><span class="ri">🏦</span>Blood Bank</div>
+    </div>
+    <div class="auth-toggle">No account? <a onclick="swap('signupPage')">Create one</a></div>
+  </div>
+
+  <!-- SIGNUP -->
+  <div id="signupPage" class="auth-card hidden">
+    <div class="auth-logo">
+      <h1>LIFE<span>LINK</span></h1>
+      <p>Join the network — save lives</p>
+    </div>
+    <div class="two-col">
+      <div class="field"><label>First Name</label><input id="sfirst" type="text" class="input" placeholder="Aarav"></div>
+      <div class="field"><label>Last Name</label><input id="slast" type="text" class="input" placeholder="Sharma"></div>
+    </div>
+    <div class="field"><label>Email</label><input id="semail" type="email" class="input" placeholder="you@example.com"></div>
+    <div class="field"><label>Password</label><input type="password" class="input" placeholder="Min 8 characters"></div>
+    <div class="two-col">
+      <div class="field"><label>Blood Type</label>
+        <select class="input" id="sblood"><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select>
+      </div>
+      <div class="field"><label>Role</label>
+        <select class="input" id="srole"><option value="donor">Donor</option><option value="hospital">Hospital</option><option value="bank">Blood Bank</option></select>
+      </div>
+    </div>
+    <div class="field"><label>City</label><input type="text" class="input" placeholder="Chennai"></div>
+    <button class="btn" onclick="doSignup()">Create Account →</button>
+    <div class="auth-toggle">Have an account? <a onclick="swap('loginPage')">Sign in</a></div>
+  </div>
+</div>
+
+<!-- ══════════ NAV ══════════ -->
+<nav class="hidden" id="mainNav">
+  <div class="nav-logo"><div class="nav-logo-dot"></div>LIFELINK</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="nav('dashboard')">Dashboard</button>
+    <button class="nav-tab" onclick="nav('donors')">Donors</button>
+    <button class="nav-tab" onclick="nav('emergency')">Emergency</button>
+    <button class="nav-tab" onclick="nav('bloodbank')">Blood Bank</button>
+    <button class="nav-tab" onclick="nav('map')">Network Map</button>
+    <button class="nav-tab" onclick="nav('profile')">Profile</button>
+  </div>
+  <div class="nav-right">
+    <div class="notif-btn" onclick="nav('emergency')">🔔<div class="notif-badge">3</div></div>
+    <div class="avatar" id="navAva" onclick="nav('profile')">DU</div>
+    <button class="btn-logout" onclick="doLogout()">Logout</button>
+  </div>
+</nav>
+
+<!-- ══════════ APP ══════════ -->
+<div class="shell hidden" id="appShell">
+
+  <!-- ── DASHBOARD ── -->
+  <div class="page hidden" id="pgDashboard">
+    <div class="page-hd">
+      <div class="page-hd-left">
+        <h1 id="dashTitle">Welcome back, Demo User</h1>
+        <p>LifeLink Donor Network · Chennai Region · <span style="color:var(--green)">●</span> Live</p>
+      </div>
+    </div>
+
+    <div class="alert-banner">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-text" style="flex:1">
+        <h3>CRITICAL: O− Blood Needed</h3>
+        <p>Apollo Hospital, Adyar · 2.3km away · Posted 8 minutes ago</p>
+      </div>
+      <button class="btn red sm" onclick="toast('Emergency response sent! Donors being notified.','success')">Respond Now</button>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-bar"><div class="stat-bar-fill" style="width:65%;background:linear-gradient(90deg,var(--cyan),var(--cyan2))"></div></div><span class="stat-icon">🩸</span><div class="stat-num">1,284</div><div class="stat-lbl">Total Donors</div><div class="stat-change" style="color:var(--green)">↑ 12% this month</div></div>
+      <div class="stat danger"><div class="stat-bar"><div class="stat-bar-fill" style="width:85%;background:linear-gradient(90deg,var(--red),#ff6b84)"></div></div><span class="stat-icon">🚨</span><div class="stat-num">7</div><div class="stat-lbl">Active Emergencies</div><div class="stat-change" style="color:var(--red)">↑ 3 in last hour</div></div>
+      <div class="stat success"><div class="stat-bar"><div class="stat-bar-fill" style="width:72%;background:linear-gradient(90deg,var(--green),#69f0ae)"></div></div><span class="stat-icon">✅</span><div class="stat-num">342</div><div class="stat-lbl">Donations Today</div><div class="stat-change" style="color:var(--green)">↑ 8% vs yesterday</div></div>
+      <div class="stat warn"><div class="stat-bar"><div class="stat-bar-fill" style="width:30%;background:linear-gradient(90deg,var(--amber),#ffcc44)"></div></div><span class="stat-icon">⚠️</span><div class="stat-num">3</div><div class="stat-lbl">Critical Low Banks</div><div class="stat-change" style="color:var(--amber)">Needs attention</div></div>
+    </div>
+
+    <div class="g2" style="margin-bottom:1rem">
+      <div class="card">
+        <div class="card-accent"></div>
+        <div class="card-title">Blood Type Availability</div>
+        <div id="bloodAvail"></div>
+      </div>
+      <div class="card">
+        <div class="card-accent green"></div>
+        <div class="card-title">Recent Activity</div>
+        <div id="recentActivity"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-accent"></div>
+      <div class="card-title">Nearby Active Requests</div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Hospital</th><th>Blood</th><th>Units</th><th>Distance</th><th>Urgency</th><th>Action</th></tr>
+          <tr><td style="font-weight:700">Apollo Hospital</td><td><span class="blood bO">O−</span></td><td>3</td><td style="color:var(--cyan);font-family:var(--mono)">2.3 km</td><td><span class="chip c-critical">Critical</span></td><td><button class="btn outline xs" onclick="toast('Connecting to Apollo Hospital...','info')">Connect</button></td></tr>
+          <tr><td style="font-weight:700">Fortis Malar</td><td><span class="blood bB">B−</span></td><td>2</td><td style="color:var(--cyan);font-family:var(--mono)">4.1 km</td><td><span class="chip c-critical">Critical</span></td><td><button class="btn outline xs" onclick="toast('Connecting to Fortis Malar...','info')">Connect</button></td></tr>
+          <tr><td style="font-weight:700">MIOT International</td><td><span class="blood bAB">AB+</span></td><td>5</td><td style="color:var(--cyan);font-family:var(--mono)">7.2 km</td><td><span class="chip c-pending">Moderate</span></td><td><button class="btn outline xs" onclick="toast('Connecting to MIOT...','info')">Connect</button></td></tr>
+          <tr><td style="font-weight:700">Sri Ramachandra</td><td><span class="blood bA">A+</span></td><td>8</td><td style="color:var(--cyan);font-family:var(--mono)">9.8 km</td><td><span class="chip c-active">Low</span></td><td><button class="btn outline xs" onclick="toast('Connecting to Sri Ramachandra...','info')">Connect</button></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DONORS ── -->
+  <div class="page hidden" id="pgDonors">
+    <div class="page-hd">
+      <div class="page-hd-left">
+        <h1>Donor Registry</h1>
+        <p>All registered donors · BFS proximity search enabled</p>
+      </div>
+      <button class="btn sm" onclick="toast('Registration form opened','info')">+ Register Donor</button>
+    </div>
+    <div class="card" style="padding:1rem;margin-bottom:1rem">
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <input class="search-input" style="flex:2;min-width:200px" placeholder="🔍  Search by name, blood type, location..." oninput="filterDonors(this.value)">
+        <select class="input" style="width:130px" onchange="filterBlood(this.value)">
+          <option value="">All Blood Types</option>
+          <option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+        </select>
+        <select class="input" style="width:130px">
+          <option>All Status</option><option>Active</option><option>Pending</option><option>Inactive</option>
+        </select>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-accent"></div>
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">Registered Donors <span id="donorCount" style="font-size:0.8rem;color:var(--gray);font-weight:600;text-transform:none;letter-spacing:0">(12 donors)</span></div>
+      <div class="table-wrap">
+        <table id="donorTable">
+          <tr><th>Name</th><th>Blood</th><th>Location</th><th>Last Donated</th><th>Count</th><th>Status</th><th>Action</th></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── EMERGENCY ── -->
+  <div class="page hidden" id="pgEmergency">
+    <div class="page-hd">
+      <div class="page-hd-left">
+        <h1>Emergency Requests</h1>
+        <p>Real-time BFS donor matching · Active emergencies</p>
+      </div>
+      <button class="btn red sm" onclick="createEmerg()">🚨 Create Emergency</button>
+    </div>
+    <div id="emergList" style="margin-bottom:1rem"></div>
+    <div class="card">
+      <div class="card-accent"></div>
+      <div class="card-title">BFS Donor Match Engine</div>
+      <div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
+        <select class="input" style="width:130px" id="bfsBlood"><option>O-</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>O+</option></select>
+        <input class="search-input" style="flex:1;min-width:150px" id="bfsLoc" placeholder="Enter location (e.g. Adyar)">
+        <button class="btn sm" onclick="runBFS()">Run BFS Search</button>
+      </div>
+      <div id="bfsResults"><div style="color:var(--gray);font-size:0.82rem;text-align:center;padding:2rem 0;font-weight:600">Enter blood type and location to run BFS donor matching algorithm</div></div>
+    </div>
+  </div>
+
+  <!-- ── BLOOD BANK ── -->
+  <div class="page hidden" id="pgBloodbank">
+    <div class="page-hd">
+      <div class="page-hd-left"><h1>Blood Bank Inventory</h1><p>Real-time stock levels · TSP delivery optimization</p></div>
+      <button class="btn sm" onclick="toast('Inventory sync requested','info')">↻ Sync</button>
+    </div>
+    <div class="stats-grid">
+      <div class="stat success"><div class="stat-bar"><div class="stat-bar-fill" style="width:80%;background:linear-gradient(90deg,var(--green),#69f0ae)"></div></div><span class="stat-icon">✅</span><div class="stat-num">2,847</div><div class="stat-lbl">Total Units Available</div></div>
+      <div class="stat danger"><div class="stat-bar"><div class="stat-bar-fill" style="width:50%;background:linear-gradient(90deg,var(--red),#ff6b84)"></div></div><span class="stat-icon">⚠️</span><div class="stat-num">3</div><div class="stat-lbl">Critical Stock Banks</div></div>
+      <div class="stat"><div class="stat-bar"><div class="stat-bar-fill" style="width:40%;background:linear-gradient(90deg,var(--cyan),var(--cyan2))"></div></div><span class="stat-icon">🚗</span><div class="stat-num">5</div><div class="stat-lbl">Active Deliveries</div></div>
+      <div class="stat warn"><div class="stat-bar"><div class="stat-bar-fill" style="width:60%;background:linear-gradient(90deg,var(--amber),#ffcc44)"></div></div><span class="stat-icon">⏰</span><div class="stat-num">48h</div><div class="stat-lbl">Avg Expiry Buffer</div></div>
+    </div>
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-accent"></div>
+      <div class="card-title">Bank Inventory Status</div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Blood Bank</th><th>A+</th><th>A−</th><th>B+</th><th>B−</th><th>AB+</th><th>AB−</th><th>O+</th><th>O−</th><th>Status</th></tr>
+          <tr><td style="font-weight:700">Apollo Blood Bank</td><td class="inv-val" style="color:var(--green)">12</td><td class="inv-val" style="color:var(--amber)">3</td><td class="inv-val" style="color:var(--green)">8</td><td class="inv-val" style="color:var(--red)">1</td><td class="inv-val" style="color:var(--amber)">5</td><td class="inv-val" style="color:var(--red)">0</td><td class="inv-val" style="color:var(--green)">9</td><td class="inv-val" style="color:var(--red)">1</td><td><span class="chip c-critical">Critical</span></td></tr>
+          <tr><td style="font-weight:700">Fortis Blood Centre</td><td class="inv-val" style="color:var(--green)">25</td><td class="inv-val" style="color:var(--green)">8</td><td class="inv-val" style="color:var(--green)">19</td><td class="inv-val" style="color:var(--amber)">4</td><td class="inv-val" style="color:var(--green)">11</td><td class="inv-val" style="color:var(--amber)">2</td><td class="inv-val" style="color:var(--green)">22</td><td class="inv-val" style="color:var(--amber)">4</td><td><span class="chip c-active">Normal</span></td></tr>
+          <tr><td style="font-weight:700">MIOT Blood Bank</td><td class="inv-val" style="color:var(--green)">18</td><td class="inv-val" style="color:var(--amber)">6</td><td class="inv-val" style="color:var(--green)">14</td><td class="inv-val" style="color:var(--amber)">2</td><td class="inv-val" style="color:var(--green)">8</td><td class="inv-val" style="color:var(--red)">1</td><td class="inv-val" style="color:var(--green)">15</td><td class="inv-val" style="color:var(--amber)">2</td><td><span class="chip c-active">Normal</span></td></tr>
+          <tr><td style="font-weight:700">Govt. Blood Centre</td><td class="inv-val" style="color:var(--amber)">8</td><td class="inv-val" style="color:var(--red)">1</td><td class="inv-val" style="color:var(--amber)">5</td><td class="inv-val" style="color:var(--red)">0</td><td class="inv-val" style="color:var(--amber)">3</td><td class="inv-val" style="color:var(--red)">0</td><td class="inv-val" style="color:var(--amber)">6</td><td class="inv-val" style="color:var(--red)">0</td><td><span class="chip c-critical">Critical</span></td></tr>
+          <tr><td style="font-weight:700">Sri Ramachandra BB</td><td class="inv-val" style="color:var(--green)">31</td><td class="inv-val" style="color:var(--green)">11</td><td class="inv-val" style="color:var(--green)">24</td><td class="inv-val" style="color:var(--amber)">6</td><td class="inv-val" style="color:var(--green)">15</td><td class="inv-val" style="color:var(--amber)">3</td><td class="inv-val" style="color:var(--green)">28</td><td class="inv-val" style="color:var(--amber)">6</td><td><span class="chip c-active">Normal</span></td></tr>
+          <tr><td style="font-weight:700">Kauvery Blood Bank</td><td class="inv-val" style="color:var(--amber)">4</td><td class="inv-val" style="color:var(--red)">0</td><td class="inv-val" style="color:var(--amber)">3</td><td class="inv-val" style="color:var(--red)">0</td><td class="inv-val" style="color:var(--amber)">2</td><td class="inv-val" style="color:var(--red)">0</td><td class="inv-val" style="color:var(--amber)">4</td><td class="inv-val" style="color:var(--red)">0</td><td><span class="chip c-critical">Critical</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-accent amber"></div>
+      <div class="card-title">TSP Route Optimization · Active Deliveries</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="route-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+            <div><div style="font-weight:700;font-size:0.88rem">📍 Apollo → MIOT → Fortis → Return</div><div style="font-size:0.74rem;color:var(--gray);margin-top:4px">🩸 O−, B−, A− &nbsp;·&nbsp; 18.4 km &nbsp;·&nbsp; 3 stops &nbsp;·&nbsp; ETA: 25 min</div></div>
+            <span class="chip c-active">In Transit</span>
+          </div>
+          <div class="prog-bar" style="margin-top:10px"><div class="prog-fill" style="width:60%;background:linear-gradient(90deg,var(--green),#69f0ae)"></div></div>
+        </div>
+        <div class="route-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+            <div><div style="font-weight:700;font-size:0.88rem">📍 Govt. Centre → Kauvery → SR → Return</div><div style="font-size:0.74rem;color:var(--gray);margin-top:4px">🩸 AB−, O− &nbsp;·&nbsp; 24.1 km &nbsp;·&nbsp; 3 stops &nbsp;·&nbsp; ETA: 42 min</div></div>
+            <span class="chip c-pending">Scheduled</span>
+          </div>
+          <div class="prog-bar" style="margin-top:10px"><div class="prog-fill" style="width:20%;background:linear-gradient(90deg,var(--amber),#ffcc44)"></div></div>
+        </div>
+        <button class="btn outline sm" style="align-self:flex-start" onclick="toast('TSP route calculated and assigned!','success')">+ Schedule New Delivery Route</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── NETWORK MAP ── -->
+  <div class="page hidden" id="pgMap">
+    <div class="page-hd"><div class="page-hd-left"><h1>Network Map</h1><p>LifeLink graph — Donors, Hospitals, Blood Banks</p></div></div>
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-accent"></div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:1rem">
+        <span style="font-size:0.74rem;color:var(--gray);font-weight:700">LEGEND</span>
+        <span style="font-size:0.76rem;color:var(--cyan);font-weight:700">● Hospitals</span>
+        <span style="font-size:0.76rem;color:var(--red);font-weight:700">● Blood Banks</span>
+        <span style="font-size:0.76rem;color:var(--green);font-weight:700">● Active Donors</span>
+        <span style="font-size:0.76rem;color:var(--amber);font-weight:700">● Pending Donors</span>
+      </div>
+      <div id="networkMap"></div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-accent"></div>
+        <div class="card-title">Graph Statistics</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="background:rgba(0,200,255,0.03);border-radius:10px;padding:12px"><div style="font-size:1.4rem;font-weight:800;letter-spacing:-0.03em">1,302</div><div style="font-size:0.68rem;color:var(--gray);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-top:3px">Total Nodes</div></div>
+          <div style="background:rgba(0,200,255,0.03);border-radius:10px;padding:12px"><div style="font-size:1.4rem;font-weight:800;letter-spacing:-0.03em">4,847</div><div style="font-size:0.68rem;color:var(--gray);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-top:3px">Edge Connections</div></div>
+          <div style="background:rgba(0,200,255,0.03);border-radius:10px;padding:12px"><div style="font-size:1.4rem;font-weight:800;letter-spacing:-0.03em">7.4</div><div style="font-size:0.68rem;color:var(--gray);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-top:3px">Avg Degree</div></div>
+          <div style="background:rgba(0,200,255,0.03);border-radius:10px;padding:12px"><div style="font-size:1.4rem;font-weight:800;letter-spacing:-0.03em">3.2</div><div style="font-size:0.68rem;color:var(--gray);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-top:3px">BFS Avg Depth</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-accent amber"></div>
+        <div class="card-title">Algorithm Complexity</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:rgba(0,200,255,0.03);border-radius:10px;padding:10px;display:flex;align-items:center;gap:10px">
+            <div style="flex:1"><div style="font-size:0.82rem;font-weight:700">BFS Proximity Search</div><div style="font-size:0.7rem;color:var(--gray);font-weight:600">Donor matching</div></div>
+            <div style="text-align:right"><div style="font-family:var(--mono);font-size:0.75rem;color:var(--cyan)">O(V + E)</div><div style="font-family:var(--mono);font-size:0.68rem;color:var(--gray)">S: O(V)</div></div>
+          </div>
+          <div style="background:rgba(0,200,255,0.03);border-radius:10px;padding:10px;display:flex;align-items:center;gap:10px">
+            <div style="flex:1"><div style="font-size:0.82rem;font-weight:700">TSP Route Optimization</div><div style="font-size:0.7rem;color:var(--gray);font-weight:600">Delivery logistics</div></div>
+            <div style="text-align:right"><div style="font-family:var(--mono);font-size:0.75rem;color:var(--cyan)">O(2ⁿ · n²)</div><div style="font-family:var(--mono);font-size:0.68rem;color:var(--gray)">S: O(2ⁿ · n)</div></div>
+          </div>
+          <div style="background:rgba(0,200,255,0.03);border-radius:10px;padding:10px;display:flex;align-items:center;gap:10px">
+            <div style="flex:1"><div style="font-size:0.82rem;font-weight:700">Notification Engine</div><div style="font-size:0.7rem;color:var(--gray);font-weight:600">Push alerts</div></div>
+            <div style="text-align:right"><div style="font-family:var(--mono);font-size:0.75rem;color:var(--cyan)">O(1)</div><div style="font-family:var(--mono);font-size:0.68rem;color:var(--gray)">S: O(N)</div></div>
+          </div>
+          <div style="background:rgba(0,200,255,0.03);border-radius:10px;padding:10px;display:flex;align-items:center;gap:10px">
+            <div style="flex:1"><div style="font-size:0.82rem;font-weight:700">Inventory Sort</div><div style="font-size:0.7rem;color:var(--gray);font-weight:600">Stock ranking</div></div>
+            <div style="text-align:right"><div style="font-family:var(--mono);font-size:0.75rem;color:var(--cyan)">O(N log N)</div><div style="font-family:var(--mono);font-size:0.68rem;color:var(--gray)">S: O(log N)</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PROFILE ── -->
+  <div class="page hidden" id="pgProfile">
+    <div class="page-hd"><div class="page-hd-left"><h1>My Profile</h1><p>Manage your account and settings</p></div></div>
+    <div class="g2">
+      <div>
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-accent"></div>
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem">
+            <div class="profile-ava" id="profileAva">DU</div>
+            <div>
+              <div style="font-size:1.2rem;font-weight:800;letter-spacing:-0.02em" id="profileName">Demo User</div>
+              <div style="color:var(--gray);font-size:0.8rem;font-weight:600;margin-top:2px" id="profileRole">Blood Donor · Chennai</div>
+              <div style="margin-top:8px"><span class="blood bO" id="profileBlood">O−</span></div>
+            </div>
+          </div>
+          <div class="field"><label>Full Name</label><input class="input" id="pName" value="Demo User"></div>
+          <div class="field"><label>Email</label><input class="input" value="demo@lifelink.io"></div>
+          <div class="field"><label>Phone</label><input class="input" value="+91 98765 43210"></div>
+          <div class="field"><label>City</label><input class="input" value="Chennai, Tamil Nadu"></div>
+          <button class="btn" onclick="saveProfile()">Save Changes</button>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-accent green"></div>
+          <div class="card-title">Donation History</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:10px;padding:8px;background:rgba(0,200,255,0.03);border-radius:8px"><div style="flex:1"><div style="font-size:0.85rem;font-weight:700">Apollo Hospital</div><div style="font-size:0.72rem;color:var(--gray)">Jan 15, 2025</div></div><span class="blood bO">O−</span><span class="chip c-active">Done</span></div>
+            <div style="display:flex;align-items:center;gap:10px;padding:8px;background:rgba(0,200,255,0.03);border-radius:8px"><div style="flex:1"><div style="font-size:0.85rem;font-weight:700">MIOT Blood Bank</div><div style="font-size:0.72rem;color:var(--gray)">Oct 12, 2024</div></div><span class="blood bO">O−</span><span class="chip c-active">Done</span></div>
+            <div style="display:flex;align-items:center;gap:10px;padding:8px;background:rgba(0,200,255,0.03);border-radius:8px"><div style="flex:1"><div style="font-size:0.85rem;font-weight:700">Fortis Malar</div><div style="font-size:0.72rem;color:var(--gray)">Jul 08, 2024</div></div><span class="blood bO">O−</span><span class="chip c-active">Done</span></div>
+            <div style="display:flex;align-items:center;gap:10px;padding:8px;background:rgba(0,200,255,0.03);border-radius:8px"><div style="flex:1"><div style="font-size:0.85rem;font-weight:700">Apollo Hospital</div><div style="font-size:0.72rem;color:var(--gray)">Apr 02, 2024</div></div><span class="blood bO">O−</span><span class="chip c-active">Done</span></div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-accent amber"></div>
+          <div class="card-title">Your Impact</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div style="text-align:center;padding:1rem;background:var(--cyanDim);border-radius:10px;border:1px solid rgba(0,200,255,0.1)"><div class="impact-num" style="color:var(--cyan)">4</div><div style="font-size:0.68rem;color:var(--gray);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-top:4px">Total Donations</div></div>
+            <div style="text-align:center;padding:1rem;background:var(--greenDim);border-radius:10px;border:1px solid rgba(0,230,118,0.1)"><div class="impact-num" style="color:var(--green)">12</div><div style="font-size:0.68rem;color:var(--gray);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-top:4px">Lives Impacted</div></div>
+            <div style="text-align:center;padding:1rem;background:var(--amberDim);border-radius:10px;border:1px solid rgba(255,171,0,0.1)"><div class="impact-num" style="color:var(--amber)">2.1L</div><div style="font-size:0.68rem;color:var(--gray);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-top:4px">mL Donated</div></div>
+            <div style="text-align:center;padding:1rem;background:var(--redDim);border-radius:10px;border:1px solid rgba(255,45,85,0.1)"><div class="impact-num" style="color:var(--red)">O−</div><div style="font-size:0.68rem;color:var(--gray);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-top:4px">Universal Donor</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-accent"></div>
+          <div class="card-title">Notification Settings</div>
+          <div style="display:flex;flex-direction:column;gap:12px" id="notifSettings"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /appShell -->
+
+<script>
+const S={user:null,page:'dashboard'};
+
+/* ─ AUTH ─ */
+function swap(id){
+  ['loginPage','signupPage'].forEach(p=>document.getElementById(p).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+function quickLogin(role){
+  const roles={donor:{name:'Donor Demo',blood:'O-',initials:'DD'},hospital:{name:'Apollo Hospital',blood:'N/A',initials:'AH'},bank:{name:'City Blood Bank',blood:'N/A',initials:'CB'}};
+  S.user={...roles[role],role};enterApp();
+}
+function doLogin(){
+  const e=document.getElementById('loginEmail').value;
+  const p=document.getElementById('loginPass').value;
+  if(!e||!p){toast('Please enter email and password','danger');return;}
+  S.user={name:e.split('@')[0].replace(/\./g,' ').replace(/\b\w/g,c=>c.toUpperCase()),role:'donor',blood:'O-',initials:e.slice(0,2).toUpperCase()};
+  enterApp();
+}
+function doSignup(){
+  const first=document.getElementById('sfirst').value||'New';
+  const last=document.getElementById('slast').value||'User';
+  const blood=document.getElementById('sblood').value;
+  const role=document.getElementById('srole').value;
+  S.user={name:`${first} ${last}`,role,blood,initials:`${first[0]}${last[0]}`.toUpperCase()};
+  toast('Account created!','success');
+  setTimeout(enterApp,400);
+}
+function enterApp(){
+  document.getElementById('authWrap').classList.add('hidden');
+  document.getElementById('mainNav').classList.remove('hidden');
+  document.getElementById('appShell').classList.remove('hidden');
+  document.getElementById('navAva').textContent=S.user.initials;
+  document.getElementById('dashTitle').textContent=`Welcome back, ${S.user.name}`;
+  document.getElementById('profileName').textContent=S.user.name;
+  document.getElementById('profileRole').textContent=`${capitalize(S.user.role)} · Chennai`;
+  document.getElementById('profileAva').textContent=S.user.initials;
+  const bClass=bloodClass(S.user.blood);
+  const pb=document.getElementById('profileBlood');
+  pb.textContent=S.user.blood;pb.className=`blood ${bClass}`;
+  buildDashboard();buildDonors();buildEmergencies();buildMap();buildNotifSettings();
+  nav('dashboard');
+  toast(`Welcome back, ${S.user.name}! 👋`,'success');
+}
+function doLogout(){
+  document.getElementById('authWrap').classList.remove('hidden');
+  document.getElementById('mainNav').classList.add('hidden');
+  document.getElementById('appShell').classList.add('hidden');
+  swap('loginPage');S.user=null;
+  toast('Logged out successfully','info');
+}
+function capitalize(s){return s.charAt(0).toUpperCase()+s.slice(1)}
+
+/* ─ NAV ─ */
+const PAGES=['dashboard','donors','emergency','bloodbank','map','profile'];
+function nav(page){
+  PAGES.forEach(p=>{
+    const el=document.getElementById('pg'+capitalize(p));
+    if(el)el.classList.toggle('hidden',p!==page);
+  });
+  document.querySelectorAll('.nav-tab').forEach((b,i)=>{
+    b.classList.toggle('active',PAGES[i]===page);
+  });
+  S.page=page;
+}
+
+/* ─ BLOOD HELPERS ─ */
+function bloodClass(b){
+  const t=b.replace(/[^A-Z]/gi,'');
+  if(t==='AB')return'bAB';
+  if(t==='A')return'bA';
+  if(t==='B')return'bB';
+  return'bO';
+}
+
+/* ─ DASHBOARD ─ */
+function buildDashboard(){
+  // Blood availability bars
+  const types=['A+','A-','B+','B-','AB+','AB-','O+','O-'];
+  const pcts=[82,45,71,30,88,25,55,15];
+  const colors=['linear-gradient(90deg,var(--cyan),var(--cyan2))','linear-gradient(90deg,var(--cyan),var(--cyan2))','linear-gradient(90deg,var(--green),#69f0ae)','linear-gradient(90deg,var(--amber),#ffcc44)','linear-gradient(90deg,var(--green),#69f0ae)','linear-gradient(90deg,var(--red),#ff6b84)','linear-gradient(90deg,var(--amber),#ffcc44)','linear-gradient(90deg,var(--red),#ff6b84)'];
+  document.getElementById('bloodAvail').innerHTML=types.map((t,i)=>`
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:0.8rem;font-weight:700">
+        <span style="font-family:var(--mono)">${t}</span>
+        <span style="color:${pcts[i]<30?'var(--red)':pcts[i]<60?'var(--amber)':'var(--green)'}">${pcts[i]}%</span>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${pcts[i]}%;background:${colors[i]}"></div></div>
+    </div>`).join('');
+
+  // Recent activity
+  const acts=[
+    {icon:'🩸',msg:'Ravi Kumar donated A+ at Apollo Blood Bank',time:'12 min ago',cls:'c-active'},
+    {icon:'🚨',msg:'Emergency request: B− at Fortis Hospital',time:'23 min ago',cls:'c-critical'},
+    {icon:'✅',msg:'Priya Sharma completed donation screening',time:'1 hr ago',cls:'c-active'},
+    {icon:'🔔',msg:'New donor registered: Chennai North Zone',time:'2 hr ago',cls:'c-pending'},
+    {icon:'📦',msg:'12 units O+ transferred to MIOT Hospital',time:'3 hr ago',cls:'c-inactive'},
+  ];
+  document.getElementById('recentActivity').innerHTML=acts.map(a=>`
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
+      <span style="font-size:0.95rem;margin-top:1px">${a.icon}</span>
+      <div style="flex:1">
+        <div style="font-size:0.82rem;font-weight:600;line-height:1.3">${a.msg}</div>
+        <div style="font-size:0.7rem;color:var(--gray);margin-top:2px;font-weight:600">${a.time}</div>
+      </div>
+      <span class="chip ${a.cls}"></span>
+    </div>`).join('');
+}
+
+/* ─ DONORS ─ */
+const DONORS=[
+  {n:'Aarav Sharma',b:'O-',l:'Adyar',ld:'2024-12-15',c:14,s:'active'},
+  {n:'Priya Rajan',b:'A+',l:'Anna Nagar',ld:'2025-01-03',c:8,s:'active'},
+  {n:'Karthik Selvan',b:'B+',l:'Velachery',ld:'2024-11-20',c:22,s:'active'},
+  {n:'Divya Nair',b:'AB-',l:'T. Nagar',ld:'2025-01-10',c:5,s:'pending'},
+  {n:'Rahul Mehta',b:'O+',l:'Egmore',ld:'2024-10-05',c:31,s:'active'},
+  {n:'Sneha Kumar',b:'B-',l:'Mylapore',ld:'2024-09-12',c:9,s:'inactive'},
+  {n:'Vikram Rao',b:'A-',l:'Porur',ld:'2025-01-08',c:17,s:'active'},
+  {n:'Ananya Pillai',b:'AB+',l:'Sholinganallur',ld:'2025-01-15',c:3,s:'active'},
+  {n:'Arjun Das',b:'O-',l:'Tambaram',ld:'2024-12-28',c:11,s:'pending'},
+  {n:'Meera Suresh',b:'A+',l:'Perambur',ld:'2025-01-12',c:6,s:'active'},
+  {n:'Siddharth V',b:'B+',l:'Chromepet',ld:'2024-11-30',c:19,s:'active'},
+  {n:'Lakshmi T',b:'O+',l:'Guindy',ld:'2025-01-09',c:4,s:'active'},
+];
+function buildDonors(){renderDonorTable(DONORS)}
+function renderDonorTable(data){
+  const tb=document.getElementById('donorTable');
+  const rows=data.map(d=>{
+    const sc=d.s==='active'?'c-active':d.s==='pending'?'c-pending':'c-inactive';
+    const sl=capitalize(d.s);
+    return`<tr class="donor-row" data-name="${d.n}" data-blood="${d.b}" data-loc="${d.l}">
+      <td style="font-weight:700">${d.n}</td>
+      <td><span class="blood ${bloodClass(d.b)}">${d.b}</span></td>
+      <td style="color:var(--gray);font-size:0.8rem">${d.l}, Chennai</td>
+      <td style="font-family:var(--mono);font-size:0.79rem;color:var(--gray)">${d.ld}</td>
+      <td style="color:var(--cyan);font-family:var(--mono);font-weight:700">${d.c}</td>
+      <td><span class="chip ${sc}">${sl}</span></td>
+      <td><button class="btn outline xs" onclick="toast('Contacting ${d.n}...','success')">Contact</button></td>
+    </tr>`;
+  }).join('');
+  // Re-insert header + rows
+  tb.innerHTML=`<tr><th>Name</th><th>Blood</th><th>Location</th><th>Last Donated</th><th>Count</th><th>Status</th><th>Action</th></tr>${rows}`;
+  document.getElementById('donorCount').textContent=`(${data.length} donors)`;
+}
+function filterDonors(q){
+  const f=DONORS.filter(d=>`${d.n} ${d.b} ${d.l}`.toLowerCase().includes(q.toLowerCase()));
+  renderDonorTable(f);
+}
+function filterBlood(b){
+  const f=b?DONORS.filter(d=>d.b===b):DONORS;
+  renderDonorTable(f);
+}
+
+/* ─ EMERGENCIES ─ */
+const EMERG=[
+  {id:1,hosp:'Apollo Hospital',blood:'O-',units:3,loc:'Adyar',min:8,urgency:'CRITICAL'},
+  {id:2,hosp:'Fortis Malar',blood:'B-',units:2,loc:'Adyar',min:23,urgency:'CRITICAL'},
+  {id:3,hosp:'MIOT International',blood:'AB+',units:5,loc:'Manapakkam',min:47,urgency:'MODERATE'},
+  {id:4,hosp:'Sri Ramachandra',blood:'A-',units:1,loc:'Porur',min:90,urgency:'LOW'},
+];
+function buildEmergencies(){
+  document.getElementById('emergList').innerHTML=EMERG.map(e=>{
+    const cls=e.urgency==='CRITICAL'?'critical':e.urgency==='MODERATE'?'moderate':'low';
+    const chipCls=e.urgency==='CRITICAL'?'c-critical':e.urgency==='MODERATE'?'c-pending':'c-inactive';
+    return`<div class="emerg-card ${cls}">
+      <div style="display:flex;align-items:flex-start;gap:1rem;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span class="chip ${chipCls}">${e.urgency}</span>
+            <span class="blood ${bloodClass(e.blood)}">${e.blood}</span>
+          </div>
+          <div style="font-weight:800;font-size:1rem;letter-spacing:-0.01em">${e.hosp}</div>
+          <div style="font-size:0.76rem;color:var(--gray);margin-top:4px;font-weight:600">📍 ${e.loc} · ${e.units} unit${e.units>1?'s':''} needed · Posted ${e.min} min ago</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0;align-items:center">
+          <button class="btn outline xs" onclick="toast('Donor match initiated for ${e.hosp}','info')">Find Donors</button>
+          <button class="btn ${e.urgency==='CRITICAL'?'red':''} xs" onclick="respondEmerg(${e.id})">Respond</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function respondEmerg(id){
+  toast('Emergency response initiated! Notifying donors via BFS...','success');
+  setTimeout(()=>toast('3 eligible donors found within 5 km','info'),1500);
+}
+function createEmerg(){
+  toast('New emergency broadcast sent!','danger');
+  setTimeout(()=>toast('BFS complete — 8 donors matched','success'),1200);
+}
+
+/* ─ BFS ─ */
+const BFS_DONORS=[
+  {name:'Aarav Sharma',blood:'O-',dist:'2.3 km',loc:'Adyar',age:28,status:'Available',col:'var(--cyan)'},
+  {name:'Arjun Das',blood:'O-',dist:'4.1 km',loc:'Tambaram',age:34,status:'Available',col:'var(--cyan)'},
+  {name:'Ravi Kumar',blood:'O-',dist:'5.8 km',loc:'Velachery',age:26,status:'Available',col:'var(--green)'},
+  {name:'Kavya Singh',blood:'O-',dist:'7.2 km',loc:'Guindy',age:31,status:'On hold',col:'var(--amber)'},
+  {name:'Preethi V',blood:'O-',dist:'9.4 km',loc:'Chromepet',age:29,status:'Available',col:'var(--cyan)'},
+];
+function runBFS(){
+  const blood=document.getElementById('bfsBlood').value;
+  const loc=document.getElementById('bfsLoc').value||'Chennai';
+  const el=document.getElementById('bfsResults');
+  el.innerHTML=`<div style="color:var(--cyan);font-size:0.82rem;text-align:center;padding:1.5rem 0;font-weight:700;animation:fadeIn 0.3s">🔄 Running BFS on graph network... Scanning radius 1 → 2 → 3...</div>`;
+  setTimeout(()=>{
+    el.innerHTML=`<div style="background:var(--greenDim);border:1px solid rgba(0,230,118,0.2);color:var(--green);padding:10px 14px;border-radius:10px;font-size:0.82rem;font-weight:700;margin-bottom:10px">✅ BFS complete — Found ${BFS_DONORS.length} eligible ${blood} donors near ${loc} · O(V+E) = 0.003ms</div>`+
+    BFS_DONORS.map((d,i)=>`
+      <div class="donor-card" style="animation-delay:${i*0.08}s">
+        <div class="donor-ava" style="background:linear-gradient(135deg,${d.col},rgba(0,0,0,0.4));color:var(--bg)">${d.name.split(' ').map(x=>x[0]).join('')}</div>
+        <div class="donor-info">
+          <div class="donor-name">${d.name}</div>
+          <div class="donor-meta">📍 ${d.loc} · Age ${d.age} · BFS Level ${i+1}</div>
+        </div>
+        <span class="blood ${bloodClass(d.blood)}">${d.blood}</span>
+        <span class="dist-chip">${d.dist}</span>
+        <button class="btn outline xs" onclick="toast('Alert sent to ${d.name}!','success')">Alert</button>
+      </div>`).join('');
+  },1100);
+}
+
+/* ─ NETWORK MAP ─ */
+function buildMap(){
+  const el=document.getElementById('networkMap');
+  const W=el.offsetWidth||700, H=440;
+  const nodes=[
+    {x:50,y:50,c:'var(--cyan)',r:11,t:'Apollo',type:'H'},
+    {x:78,y:28,c:'var(--cyan)',r:9,t:'MIOT',type:'H'},
+    {x:22,y:72,c:'var(--cyan)',r:10,t:'Fortis',type:'H'},
+    {x:62,y:80,c:'var(--cyan)',r:9,t:'SR',type:'H'},
+    {x:38,y:18,c:'var(--red)',r:10,t:'City BB',type:'B'},
+    {x:82,y:62,c:'var(--red)',r:9,t:'Apollo BB',type:'B'},
+    {x:14,y:38,c:'var(--red)',r:8,t:'Govt BB',type:'B'},
+    {x:56,y:55,c:'var(--green)',r:6,t:'D1',type:'D'},
+    {x:34,y:44,c:'var(--green)',r:6,t:'D2',type:'D'},
+    {x:66,y:44,c:'var(--green)',r:5,t:'D3',type:'D'},
+    {x:44,y:66,c:'var(--green)',r:7,t:'D4',type:'D'},
+    {x:19,y:58,c:'var(--amber)',r:5,t:'D5',type:'D'},
+    {x:72,y:72,c:'var(--green)',r:6,t:'D6',type:'D'},
+    {x:28,y:28,c:'var(--amber)',r:5,t:'D7',type:'D'},
+    {x:87,y:40,c:'var(--green)',r:6,t:'D8',type:'D'},
+    {x:48,y:35,c:'var(--green)',r:5,t:'D9',type:'D'},
+  ];
+  const edges=[[0,4],[0,7],[0,8],[0,15],[1,5],[1,9],[1,14],[2,6],[2,11],[2,8],[3,5],[3,12],[3,10],[4,7],[4,13],[5,9],[5,14],[6,11],[0,1],[1,3],[0,2],[2,3],[4,15],[7,10],[8,13]];
+  let svg=`<svg width="${W}" height="${H}" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <pattern id="g" width="8" height="8" patternUnits="userSpaceOnUse"><path d="M8 0L0 0 0 8" fill="none" stroke="rgba(0,200,255,0.06)" stroke-width="0.15"/></pattern>
+      <filter id="glow"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <radialGradient id="cg" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(0,200,255,0.06)"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+    </defs>
+    <rect width="100" height="100" fill="url(#g)"/>
+    <ellipse cx="50" cy="50" rx="45" ry="45" fill="url(#cg)"/>`;
+  // Draw edges
+  edges.forEach(([a,b])=>{
+    if(nodes[a]&&nodes[b]){
+      const n1=nodes[a],n2=nodes[b];
+      const isActive=(n1.type!=='D'||n2.type!=='D');
+      svg+=`<line x1="${n1.x}" y1="${n1.y}" x2="${n2.x}" y2="${n2.y}" stroke="${isActive?'rgba(0,200,255,0.18)':'rgba(0,200,255,0.07)'}" stroke-width="${isActive?0.4:0.2}"/>`;
+    }
+  });
+  // Draw nodes
+  nodes.forEach(n=>{
+    const isMain=n.type!=='D';
+    svg+=`<g filter="${isMain?'url(#glow)':''}">
+      <circle cx="${n.x}" cy="${n.y}" r="${n.r+2}" fill="${n.c}" opacity="${isMain?0.07:0.04}"/>
+      <circle cx="${n.x}" cy="${n.y}" r="${n.r}" fill="rgba(4,11,20,0.8)" stroke="${n.c}" stroke-width="${isMain?0.8:0.5}"/>
+      <circle cx="${n.x}" cy="${n.y}" r="${n.r*0.45}" fill="${n.c}" opacity="${isMain?0.9:0.6}"/>
+      ${isMain?`<text x="${n.x}" y="${n.y+n.r+3}" text-anchor="middle" fill="${n.c}" font-size="3" font-family="JetBrains Mono,monospace" opacity="0.8">${n.t}</text>`:''}
+    </g>`;
+  });
+  svg+=`</svg>`;
+  el.innerHTML=svg;
+}
+
+/* ─ NOTIFICATIONS ─ */
+const NOTIFS=[
+  {l:'Emergency blood requests nearby',on:true},
+  {l:'Donation eligibility reminders',on:true},
+  {l:'Blood bank stock alerts',on:false},
+  {l:'Monthly donation summary',on:true},
+];
+function buildNotifSettings(){
+  document.getElementById('notifSettings').innerHTML=NOTIFS.map((s,i)=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <span style="font-size:0.85rem;font-weight:600">${s.l}</span>
+      <div class="toggle" id="tog${i}" onclick="toggleNotif(${i})" style="background:${s.on?'var(--cyan)':'rgba(255,255,255,0.1)'}">
+        <div class="toggle-knob" style="left:${s.on?'21px':'3px'}"></div>
+      </div>
+    </div>`).join('');
+}
+function toggleNotif(i){
+  NOTIFS[i].on=!NOTIFS[i].on;
+  const tog=document.getElementById('tog'+i);
+  tog.style.background=NOTIFS[i].on?'var(--cyan)':'rgba(255,255,255,0.1)';
+  tog.children[0].style.left=NOTIFS[i].on?'21px':'3px';
+  toast(NOTIFS[i].on?'Notification enabled':'Notification disabled','info');
+}
+
+/* ─ PROFILE ─ */
+function saveProfile(){
+  const name=document.getElementById('pName').value||'User';
+  document.getElementById('profileName').textContent=name;
+  document.getElementById('dashTitle').textContent=`Welcome back, ${name}`;
+  toast('Profile updated successfully!','success');
+}
+
+/* ─ TOAST ─ */
+function toast(msg,type='info'){
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  const icons={success:'✅',danger:'🚨',info:'ℹ️'};
+  el.innerHTML=`<span>${icons[type]||'·'}</span><span>${msg}</span>`;
+  document.getElementById('toastCont').appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transform='translateX(20px)';el.style.transition='all 0.3s';setTimeout(()=>el.remove(),300)},3200);
+}
+
+// Animate progress bars after page load
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    document.querySelectorAll('.prog-fill').forEach(el=>{
+      const w=el.style.width;el.style.width='0';
+      requestAnimationFrame(()=>{el.style.width=w;});
+    });
+  },100);
+});
+
+// Rebuild map on resize
+let resizeTimer;
+window.addEventListener('resize',()=>{
+  clearTimeout(resizeTimer);
+  resizeTimer=setTimeout(()=>{if(S.page==='map')buildMap();},200);
+});
+</script>
+</body>
+</html>
