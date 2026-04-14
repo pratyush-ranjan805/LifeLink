@@ -18,6 +18,11 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/lifelink')
   .then(() => console.log('MongoDB connected'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
+// Root Health Check Route
+app.get('/', (req, res) => {
+  res.send('LifeLink API is running and connected to MongoDB!');
+});
+
 // Routes
 app.use('/auth', authRoutes);
 app.use('/donors', donorRoutes);
