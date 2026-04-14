@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useToast } from '../context/ToastContext';
+import { API_URL } from '../config';
 
 const BloodBank = () => {
   const [banks, setBanks] = useState([]);
@@ -12,7 +13,7 @@ const BloodBank = () => {
 
   const fetchInventory = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/bloodbank/inventory');
+      const res = await axios.get(`${API_URL}/bloodbank/inventory`);
       if (res.data.length > 0) {
         setBanks(res.data);
       } else {
@@ -32,7 +33,7 @@ const BloodBank = () => {
 
   const scheduleTSP = async () => {
     try {
-      const res = await axios.post('http://localhost:5000/bloodbank/tsp', {
+      const res = await axios.post(`${API_URL}/bloodbank/tsp`, {
         stops: ['Apollo Blood Bank', 'Fortis Blood Centre', 'MIOT Blood Bank']
       });
       toast(`TSP assigned! Route: ${res.data.orderedStops.join(' → ')}`, 'success');

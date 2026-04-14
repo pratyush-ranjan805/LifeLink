@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useToast } from '../context/ToastContext';
+import { API_URL } from '../config';
 
 const Emergency = () => {
   const [emergencies, setEmergencies] = useState([]);
@@ -17,7 +18,7 @@ const Emergency = () => {
 
   const fetchEmergencies = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/emergency');
+      const res = await axios.get(`${API_URL}/emergency`);
       if (res.data.length > 0) {
         setEmergencies(res.data);
       } else {
@@ -43,7 +44,7 @@ const Emergency = () => {
 
   const createEmerg = async () => {
     try {
-      await axios.post('http://localhost:5000/emergency', {
+      await axios.post(`${API_URL}/emergency`, {
         hospitalName: 'New Emergency Demo',
         bloodGroup: 'A+',
         unitsNeeded: 2,
@@ -62,7 +63,7 @@ const Emergency = () => {
     setIsLoading(true);
     setBfsResults(null);
     try {
-      const res = await axios.post('http://localhost:5000/emergency/bfs', {
+      const res = await axios.post(`${API_URL}/emergency/bfs`, {
         bloodGroup: bfsBlood,
         location: bfsLoc
       });

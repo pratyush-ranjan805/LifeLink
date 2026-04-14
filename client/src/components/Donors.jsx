@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useToast } from '../context/ToastContext';
+import { API_URL } from '../config';
 
 const Donors = () => {
   const [donors, setDonors] = useState([]);
@@ -14,7 +15,7 @@ const Donors = () => {
 
   const fetchDonors = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/donors', {
+      const res = await axios.get(`${API_URL}/donors`, {
         params: { search, bloodGroup: bloodType }
       });
       // Merge with hardcoded fallback if API fails or is empty, for simulation purposes.
@@ -43,7 +44,7 @@ const Donors = () => {
 
   const registerDonor = async () => {
     try {
-      await axios.post('http://localhost:5000/donors', {
+      await axios.post(`${API_URL}/donors`, {
         name: 'New Volunteer',
         bloodGroup: 'B+',
         location: 'T. Nagar',
